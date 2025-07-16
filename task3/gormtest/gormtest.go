@@ -1,6 +1,7 @@
 package gormtest
 
 import (
+	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -31,6 +32,7 @@ type Post struct {
 type Comment struct {
 	gorm.Model
 	ID      uint
+	UserID  uint
 	Content string
 	PostID  uint
 }
@@ -106,3 +108,41 @@ func GetPostWithMostComments() Post {
 为 Post 模型添加一个钩子函数，在文章创建时自动更新用户的文章数量统计字段。
 为 Comment 模型添加一个钩子函数，在评论删除时检查文章的评论数量，如果评论数量为 0，则更新文章的评论状态为 "无评论"。
 */
+
+func (p *Post) AfterCreate(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		if err := tx.Debug().Model(&Post{UserID: p.UserID}).Count(&count).Error; err != nil {
+			return err
+		}
+		//err2 := tx.Debug().Select("post_size").Updates(&User{ID: p.UserID, PostSize: uint(count)}).Error
+		//此种方式不会触发更新钩子
+		result := tx.Debug().Model(&User{}).Where("id=?", p.UserID).UpdateColumn("post_size", count)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return fmt.Errorf("更新用户的文章数量统计字段失败")
+		}
+		return nil
+	})
+}
+
+func (c *Comment) AfterDelete(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		var count int64
+		if err1 := tx.Debug().Model(&Comment{PostID: c.PostID}).Count(&count).Error; err1 != nil {
+			return err1
+		}
+		if count == 0 {
+			result := tx.Model(&Post{}).Where("id=?", c.PostID).UpdateColumn("comment_status", "无评论")
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected == 0 {
+				return fmt.Errorf("更新文章的评论状态失败")
+			}
+		}
+		return nil
+	})
+}
