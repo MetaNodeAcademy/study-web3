@@ -1,10 +1,6 @@
 package main
 
-import (
-	"encoding/json"
-	"fmt"
-	"task3/gormtest"
-)
+import "task3/gormtest"
 
 func main() {
 	/*
@@ -15,13 +11,15 @@ func main() {
 	//初始化数据
 	//gormtest.InitData()
 
+	gormtest.TestHookWithAfterDelete()
+
 	//user := gormtest.GetPostByUserId(1)
 	//data, _ := json.Marshal(user)
 	//fmt.Println("查询某个用户发布的所有文章及其对应的评论信息: ", string(data))
 
-	post := gormtest.GetPostWithMostComments()
-	data, _ := json.Marshal(post)
-	fmt.Println("查询评论数量最多的文章信息: ", string(data))
+	//post := gormtest.GetPostWithMostComments()
+	//data, _ := json.Marshal(post)
+	//fmt.Println("查询评论数量最多的文章信息: ", string(data))
 
 	/*
 		Sqlx

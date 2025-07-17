@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
 )
 
 /*
@@ -32,7 +33,6 @@ type Post struct {
 type Comment struct {
 	gorm.Model
 	ID      uint
-	UserID  uint
 	Content string
 	PostID  uint
 }
@@ -62,7 +62,10 @@ func InitData() {
 	post1.Comments = append(post1.Comments, comment1, comment2)
 	post2.Comments = append(post2.Comments, comment3)
 	user.Posts = append(user.Posts, post1, post2)
-	db.Debug().Create(&user)
+	result := db.Debug().Create(&user)
+	if result.Error != nil {
+		log.Fatalf("创建用户失败: %v", result.Error)
+	}
 }
 
 /*
@@ -110,39 +113,39 @@ func GetPostWithMostComments() Post {
 */
 
 func (p *Post) AfterCreate(db *gorm.DB) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var count int64
-		if err := tx.Debug().Model(&Post{UserID: p.UserID}).Count(&count).Error; err != nil {
-			return err
-		}
-		//err2 := tx.Debug().Select("post_size").Updates(&User{ID: p.UserID, PostSize: uint(count)}).Error
-		//此种方式不会触发更新钩子
-		result := tx.Debug().Model(&User{}).Where("id=?", p.UserID).UpdateColumn("post_size", count)
+	var count int64
+	if err := db.Debug().Model(&Post{}).Where("user_id = ?", p.UserID).Count(&count).Error; err != nil {
+		return err
+	}
+	result := db.Debug().Model(&User{}).Where("id=?", p.UserID).Update("post_size", count)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("更新用户的文章数量统计字段失败")
+	}
+	return nil
+}
+
+func (c *Comment) AfterDelete(db *gorm.DB) error {
+	var count int64
+
+	if err1 := db.Debug().Model(&Comment{}).Where("post_id = ?", c.PostID).Count(&count).Error; err1 != nil {
+		return err1
+	}
+	if count == 0 {
+		result := db.Model(&Post{}).Where("id=?", c.PostID).Update("comment_status", "无评论")
 		if result.Error != nil {
 			return result.Error
 		}
 		if result.RowsAffected == 0 {
-			return fmt.Errorf("更新用户的文章数量统计字段失败")
+			return fmt.Errorf("更新文章的评论状态失败")
 		}
-		return nil
-	})
+	}
+	return nil
 }
 
-func (c *Comment) AfterDelete(db *gorm.DB) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var count int64
-		if err1 := tx.Debug().Model(&Comment{PostID: c.PostID}).Count(&count).Error; err1 != nil {
-			return err1
-		}
-		if count == 0 {
-			result := tx.Model(&Post{}).Where("id=?", c.PostID).UpdateColumn("comment_status", "无评论")
-			if result.Error != nil {
-				return result.Error
-			}
-			if result.RowsAffected == 0 {
-				return fmt.Errorf("更新文章的评论状态失败")
-			}
-		}
-		return nil
-	})
+func TestHookWithAfterDelete() {
+	comment := &Comment{ID: 3, PostID: 2}
+	db.Debug().Delete(comment)
 }
