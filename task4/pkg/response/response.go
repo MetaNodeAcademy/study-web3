@@ -26,3 +26,11 @@ func Fail(c *gin.Context, code int, msg string) {
 		Data:    nil,
 	})
 }
+
+func FailStop(c *gin.Context, code int, msg string) {
+	c.AbortWithStatusJSON(http.StatusOK, Response{
+		Code:    code,
+		Message: msg,
+		Data:    nil,
+	})
+}

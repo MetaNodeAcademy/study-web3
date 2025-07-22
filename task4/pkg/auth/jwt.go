@@ -32,7 +32,7 @@ func GenerateToken(user model.User) (string, error) {
 func ParseToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return config.GetConfig().Auth.JwtSecret, nil
+		return []byte(config.GetConfig().Auth.JwtSecret), nil
 	})
 
 	if err != nil || !token.Valid {

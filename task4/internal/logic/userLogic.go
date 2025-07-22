@@ -13,7 +13,7 @@ var UserLogic = new(userLogic)
 
 func (s *userLogic) Page(req *model.UserPageReq) ([]model.User, error) {
 	var userList []model.User
-	err := db.DB.Find(&userList).Error
+	err := db.DB.Omit("password").Find(&userList).Error
 	return userList, err
 }
 
