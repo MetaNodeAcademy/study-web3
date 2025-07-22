@@ -4,7 +4,20 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"uniqueIndex;size:32"`
-	Password string `gorm:"size:255"`
+	Username string `gorm:"unique;not null"`
+	Password string `gorm:"not null"`
+	Email    string `gorm:"unique;not null"`
 	Role     string `gorm:"size:32;default:user"`
+}
+type UserLoginReq struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+type UserLoginResp struct {
+	Token string `json:"token"`
+}
+
+type UserPageReq struct {
+	PageNum  int `form:"pageNum"`
+	PageSize int `form:"pageSize"`
 }

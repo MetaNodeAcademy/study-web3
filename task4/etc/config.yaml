@@ -6,4 +6,8 @@ mysql:
   port: 3306
   user: root
   password: Xm@123
-  database: test
+  database: go-blog
+
+auth:
+  jwt_secret: JmOB9LwvhNkvm9C1LjISZtmrb1mRfFwA
+  token_expiry: 86400

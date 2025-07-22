@@ -15,13 +15,11 @@ func InitRouter() *gin.Engine {
 		authGroup := apiV1.Group("/auth")
 		{
 			authGroup.POST("/register", handler.Register)
+			authGroup.POST("/login", handler.Login)
 		}
-
-		permsGroup := apiV1.Group("/")
-		permsGroup.Use(middleware.AuthMiddleware())
-		userGroup := permsGroup.Group("/user")
+		userGroup := apiV1.Group("/user").Use(middleware.AuthMiddleware())
 		{
-			userGroup.POST("/list", nil)
+			userGroup.GET("/page", handler.Page)
 		}
 	}
 

@@ -36,3 +36,15 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// 角色权限中间件
+func RoleMiddleware(requiredRole string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("userRole")
+		if !exists || role != requiredRole {
+			response.Fail(c, 403, "无权限访问")
+			return
+		}
+		c.Next()
+	}
+}
