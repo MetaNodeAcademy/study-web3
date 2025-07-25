@@ -11,10 +11,16 @@ type userLogic struct{}
 
 var UserLogic = new(userLogic)
 
-func (s *userLogic) Page(req *model.UserPageReq) ([]model.User, error) {
-	var userList []model.User
-	err := db.DB.Omit("password").Find(&userList).Error
-	return userList, err
+func (s *userLogic) Page(req *model.UserPageReq) (*db.PagedResult, error) {
+	var users []model.User
+	return db.Paginate(
+		db.DB.Omit("password"),
+		db.QueryParams{
+			Page:     req.Page,
+			PageSize: req.PageSize,
+		},
+		&users,
+	)
 }
 
 // 用户注册

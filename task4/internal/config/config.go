@@ -19,6 +19,11 @@ type Configuration struct {
 	Server struct {
 		Port string `yaml:"port"`
 	} `yaml:"server"`
+	
+	Log struct {
+		Path  string `yaml:"path"`
+		Level string `yaml:"level"`
+	} `yaml:"log"`
 
 	MySQL struct {
 		Host     string `yaml:"host"`

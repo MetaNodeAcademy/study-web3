@@ -18,6 +18,6 @@ type UserLoginResp struct {
 }
 
 type UserPageReq struct {
-	PageNum  int `form:"pageNum"`
-	PageSize int `form:"pageSize"`
+	Page     int `form:"page" binding:"min=1"`
+	PageSize int `form:"pageSize" binding:"min=1"`
 }
